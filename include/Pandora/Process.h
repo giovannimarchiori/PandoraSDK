@@ -9,6 +9,7 @@
 #define PANDORA_PROCESS_H 1
 
 #include "Pandora/StatusCodes.h"
+#include "Pandora/MessageStream.h"
 
 #include <string>
 
@@ -18,12 +19,21 @@ namespace pandora
 class Pandora;
 class TiXmlHandle;
 
+
+// Helper macros for easy logging
+// this->GetType() is not useful because returns the name of the base class
+#define LOG_VERBOSE(msg)   log(MessageStream::Level::VERBOSE, this->GetInstanceName(), typeid(*this).name(), __FUNCTION__, msg)
+#define LOG_DEBUG(msg)   log(MessageStream::Level::DEBUG, this->GetInstanceName(), typeid(*this).name(), __FUNCTION__, msg)
+#define LOG_INFO(msg)    log(MessageStream::Level::INFO, this->GetInstanceName(), typeid(*this).name(), __FUNCTION__, msg)
+#define LOG_WARNING(msg) log(MessageStream::Level::WARNING, this->GetInstanceName(), typeid(*this).name(), __FUNCTION__, msg)
+#define LOG_ERROR(msg)   log(MessageStream::Level::ERROR, this->GetInstanceName(), typeid(*this).name(), __FUNCTION__, msg)
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
  *  @brief  Process class.
  */
-class Process
+class Process : public MessageStream
 {
 public:
     /**
