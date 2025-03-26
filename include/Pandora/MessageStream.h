@@ -21,14 +21,16 @@ public:
 
     // Set log level dynamically
     void setLogLevel(Level level);
-
     void setLogLevel(const std::string& level);
+
+    // Get log level
+    std::string getLogLevel() const;
 
     // Log a message with function name and severity
     // old - pass message to log function
     // void log(Level level, const std::string& objName, const std::string& className, const std::string& function, const std::string& message) const;
     // new - use log(..)  << message << std::endl; so that one can concatenate various pieces of info
-    std::ostream& log(Level level, const std::string& objName, const std::string& className, const std::string& function);
+    std::ostream& log(Level level, const std::string& objName, const std::string& className, const std::string& function) const;
 
     // getters/setters for default output level
     static void setDefaultLogLevel(Level level) { defaultLogLevel = level; }
@@ -39,7 +41,7 @@ private:
     mutable std::mutex mutex;     // Protects concurrent access
     Level logLevel;               // Current log level
     static Level defaultLogLevel; // Default log level (usually INFO)
-    std::ostream nullStream{nullptr};
+    mutable std::ostream nullStream{nullptr};
 
     // Convert enum to string for printing
     static std::string levelToString(Level level);
@@ -66,6 +68,11 @@ inline void MessageStream::setLogLevel(const std::string& level) {
     logLevel = stringToLevel(level);
 }
 
+// Get log level
+inline std::string MessageStream::getLogLevel() const {
+    return levelToString(logLevel);
+}
+        
 // Log a message with function name and severity
 /*
 inline void MessageStream::log(Level level, const std::string& objName, const std::string& className, const std::string& function, const std::string& message) const {
@@ -89,7 +96,7 @@ inline void MessageStream::log(Level level, const std::string& objName, const st
 }
 */
 
-inline std::ostream& MessageStream::log(Level level, const std::string& objName, const std::string& className, const std::string& function) {
+inline std::ostream& MessageStream::log(Level level, const std::string& objName, const std::string& className, const std::string& function) const {
     std::lock_guard<std::mutex> lock(mutex);  // Ensure thread safety
 
     (void) function; // silence "unused parameter" warning
