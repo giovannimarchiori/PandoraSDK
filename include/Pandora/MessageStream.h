@@ -25,7 +25,10 @@ public:
     void setLogLevel(const std::string& level);
 
     // Log a message with function name and severity
-    void log(Level level, const std::string& objName, const std::string& className, const std::string& function, const std::string& message) const;
+    // old - pass message to log function
+    // void log(Level level, const std::string& objName, const std::string& className, const std::string& function, const std::string& message) const;
+    // new - use log(..)  << message << std::endl; so that one can concatenate various pieces of info
+    std::ostream& log(Level level, const std::string& objName, const std::string& className, const std::string& function);
 
     // getters/setters for default output level
     static void setDefaultLogLevel(Level level) { defaultLogLevel = level; }
@@ -36,6 +39,7 @@ private:
     mutable std::mutex mutex;     // Protects concurrent access
     Level logLevel;               // Current log level
     static Level defaultLogLevel; // Default log level (usually INFO)
+    std::ostream nullStream{nullptr};
 
     // Convert enum to string for printing
     static std::string levelToString(Level level);
@@ -63,6 +67,7 @@ inline void MessageStream::setLogLevel(const std::string& level) {
 }
 
 // Log a message with function name and severity
+/*
 inline void MessageStream::log(Level level, const std::string& objName, const std::string& className, const std::string& function, const std::string& message) const {
     std::lock_guard<std::mutex> lock(mutex);  // Ensure thread safety
 
@@ -80,6 +85,29 @@ inline void MessageStream::log(Level level, const std::string& objName, const st
             << std::left << std::setw(7)
             << levelToString(level) << "  "
             << message << std::endl;
+    }
+}
+*/
+
+inline std::ostream& MessageStream::log(Level level, const std::string& objName, const std::string& className, const std::string& function) {
+    std::lock_guard<std::mutex> lock(mutex);  // Ensure thread safety
+
+    (void) function; // silence "unused parameter" warning
+
+    // Only print if message level is >= current log level
+    if (level >= logLevel) {
+        return std::cout
+            << std::left << std::setw(10)
+            << objName.substr(0, 10) << "  "
+            << std::left << std::setw(30)
+            << demangle(className.c_str()).substr(0, 30) << "  "
+            // << std::left << std::setw(20)
+            // << function.substr(0, 20) << "  "
+            << std::left << std::setw(7)
+            << levelToString(level) << "  ";
+    }
+    else {
+        return nullStream;
     }
 }
 

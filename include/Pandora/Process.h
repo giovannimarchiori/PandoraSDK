@@ -22,11 +22,17 @@ class TiXmlHandle;
 
 // Helper macros for easy logging
 // this->GetType() is not useful because returns the name of the base class
-#define LOG_VERBOSE(msg)   log(MessageStream::Level::VERBOSE, this->GetInstanceName(), typeid(*this).name(), __FUNCTION__, msg)
-#define LOG_DEBUG(msg)   log(MessageStream::Level::DEBUG, this->GetInstanceName(), typeid(*this).name(), __FUNCTION__, msg)
-#define LOG_INFO(msg)    log(MessageStream::Level::INFO, this->GetInstanceName(), typeid(*this).name(), __FUNCTION__, msg)
-#define LOG_WARNING(msg) log(MessageStream::Level::WARNING, this->GetInstanceName(), typeid(*this).name(), __FUNCTION__, msg)
-#define LOG_ERROR(msg)   log(MessageStream::Level::ERROR, this->GetInstanceName(), typeid(*this).name(), __FUNCTION__, msg)
+//#define LOG_VERBOSE(msg)   log(MessageStream::Level::VERBOSE, this->GetInstanceName(), typeid(*this).name(), __FUNCTION__, msg)
+//#define LOG_DEBUG(msg)   log(MessageStream::Level::DEBUG, this->GetInstanceName(), typeid(*this).name(), __FUNCTION__, msg)
+//#define LOG_INFO(msg)    log(MessageStream::Level::INFO, this->GetInstanceName(), typeid(*this).name(), __FUNCTION__, msg)
+//#define LOG_WARNING(msg) log(MessageStream::Level::WARNING, this->GetInstanceName(), typeid(*this).name(), __FUNCTION__, msg)
+//#define LOG_ERROR(msg)   log(MessageStream::Level::ERROR, this->GetInstanceName(), typeid(*this).name(), __FUNCTION__, msg)
+// Unfortunately verbose() clashes with method in DD4hep DetElement...
+#define pverbose() log(MessageStream::Level::VERBOSE, this->GetInstanceName(), typeid(*this).name(), __FUNCTION__)
+#define pdebug() log(MessageStream::Level::DEBUG, this->GetInstanceName(), typeid(*this).name(), __FUNCTION__)
+#define pinfo() log(MessageStream::Level::INFO, this->GetInstanceName(), typeid(*this).name(), __FUNCTION__)
+#define pwarning() log(MessageStream::Level::WARNING, this->GetInstanceName(), typeid(*this).name(), __FUNCTION__)
+#define perror() log(MessageStream::Level::ERROR, this->GetInstanceName(), typeid(*this).name(), __FUNCTION__)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
