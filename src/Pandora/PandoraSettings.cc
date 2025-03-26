@@ -9,6 +9,7 @@
 #include "Helpers/XmlHelper.h"
 
 #include "Pandora/PandoraSettings.h"
+#include "Pandora/MessageStream.h"
 
 namespace pandora
 {
@@ -101,6 +102,11 @@ StatusCode PandoraSettings::ReadGlobalSettings(const TiXmlHandle *const pXmlHand
     m_mcPfoSelectionLowEnergyNPCutOff = 1.2f;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(*pXmlHandle,
         "MCPfoSelectionProtonNeutronEnergyCutOff", m_mcPfoSelectionLowEnergyNPCutOff));
+
+    std::string defaultOutputLevel;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(*pXmlHandle,
+        "DefaultOutputLevel", defaultOutputLevel));
+    pandora::MessageStream::setDefaultLogLevel(defaultOutputLevel);
 
     return STATUS_CODE_SUCCESS;
 }

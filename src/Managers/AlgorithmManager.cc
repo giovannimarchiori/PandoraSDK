@@ -15,6 +15,7 @@
 #include "Managers/AlgorithmManager.h"
 
 #include "Xml/tinyxml.h"
+#include "Helpers/XmlHelper.h"
 
 #include <iomanip>
 #include <iostream>
@@ -134,6 +135,13 @@ StatusCode AlgorithmManager::CreateAlgorithm(TiXmlElement *const pXmlElement, st
 
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, pLocalAlgorithm->ReadSettings(TiXmlHandle(pXmlElement)));
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, pLocalAlgorithm->Initialize());
+
+        // set output level (handle this here rather than deferring to each algorithm)
+        std::string outputLevel;
+        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+                                       XmlHelper::ReadValue(TiXmlHandle(pXmlElement), "OutputLevel", outputLevel));
+        if (outputLevel != "")
+            pLocalAlgorithm->setLogLevel(outputLevel);
     }
     catch (StatusCodeException &statusCodeException)
     {

@@ -1,5 +1,5 @@
 #ifndef PANDORA_MESSAGE_STREAM_H
-#define PANDORA_MESSAGE_STREAM_H_1
+#define PANDORA_MESSAGE_STREAM_H 1
 
 #include <iostream>
 #include <iomanip>
@@ -22,22 +22,33 @@ public:
     // Set log level dynamically
     void setLogLevel(Level level);
 
+    void setLogLevel(const std::string& level);
+
     // Log a message with function name and severity
     void log(Level level, const std::string& objName, const std::string& className, const std::string& function, const std::string& message) const;
 
+    // getters/setters for default output level
+    static void setDefaultLogLevel(Level level) { defaultLogLevel = level; }
+    static Level getDefaultLogLevel() { return defaultLogLevel; }
+    static void setDefaultLogLevel(const std::string& level) { defaultLogLevel = stringToLevel(level); }
+
 private:
-    mutable std::mutex mutex;  // Protects concurrent access
-    Level logLevel;            // Default log level is INFO
+    mutable std::mutex mutex;     // Protects concurrent access
+    Level logLevel;               // Current log level
+    static Level defaultLogLevel; // Default log level (usually INFO)
 
     // Convert enum to string for printing
     static std::string levelToString(Level level);
+
+    // Convert string to enum for parsing xml files
+    static Level stringToLevel(const std::string& s);
 
     // demangle a string
     static std::string demangle(const char* mangled);
 };
 
 inline MessageStream::MessageStream() :
-    logLevel(Level::INFO) {
+    logLevel(defaultLogLevel) {
 }
 
 // Set log level dynamically
@@ -46,20 +57,27 @@ inline void MessageStream::setLogLevel(Level level) {
     logLevel = level;
 }
 
+inline void MessageStream::setLogLevel(const std::string& level) {
+    std::lock_guard<std::mutex> lock(mutex);
+    logLevel = stringToLevel(level);
+}
+
 // Log a message with function name and severity
 inline void MessageStream::log(Level level, const std::string& objName, const std::string& className, const std::string& function, const std::string& message) const {
     std::lock_guard<std::mutex> lock(mutex);  // Ensure thread safety
 
+    (void) function; // silence "unused parameter" warning
+
     // Only print if message level is >= current log level
     if (level >= logLevel) {
         std::cout
-            << std::left << std::setw(20)
-            << objName.substr(0, 20) << "  "
+            << std::left << std::setw(10)
+            << objName.substr(0, 10) << "  "
             << std::left << std::setw(30)
             << demangle(className.c_str()).substr(0, 30) << "  "
-            << std::left << std::setw(20)
-            << function.substr(0, 20) << "  "
-            << std::left << std::setw(10)
+            // << std::left << std::setw(20)
+            // << function.substr(0, 20) << "  "
+            << std::left << std::setw(7)
             << levelToString(level) << "  "
             << message << std::endl;
     }
@@ -77,6 +95,23 @@ inline std::string MessageStream::levelToString(Level level) {
     }
 }
 
+inline MessageStream::Level MessageStream::stringToLevel(const std::string& s) {
+    if (s == "VERBOSE")
+        return Level::VERBOSE;
+    else if (s == "DEBUG")
+        return Level::DEBUG;
+    else if (s == "INFO")
+        return Level::INFO;
+    else if (s == "WARNING")
+        return Level::WARNING;
+    else if (s == "ERROR")
+        return Level::ERROR;
+    else {
+        std::cout << "Unknown output level " << s << ", returning default (INFO)" << std::endl;
+        return Level::INFO;
+    }
+}        
+    
 inline std::string MessageStream::demangle(const char* mangled) {
     int status;
     char* demangled = abi::__cxa_demangle(mangled, nullptr, nullptr, &status);
@@ -89,13 +124,6 @@ inline std::string MessageStream::demangle(const char* mangled) {
     free(demangled);
     return result;
 }
-
-// Helper macros for easy logging
-//#define LOG_VERBOSE(msg)   log(MessageStream::Level::VERBOSE, typeid(*this).name(), __FUNCTION__, msg)
-//#define LOG_DEBUG(msg)   log(MessageStream::Level::DEBUG, typeid(*this).name(), __FUNCTION__, msg)
-//#define LOG_INFO(msg)    log(MessageStream::Level::INFO, typeid(*this).name(), __FUNCTION__, msg)
-//#define LOG_WARNING(msg) log(MessageStream::Level::WARNING, typeid(*this).name(), __FUNCTION__, msg)
-//#define LOG_ERROR(msg)   log(MessageStream::Level::ERROR, typeid(*this).name(), __FUNCTION__, msg)
 
 } // end namespace Pandora
 #endif // MESSAGE_STREAM_H
