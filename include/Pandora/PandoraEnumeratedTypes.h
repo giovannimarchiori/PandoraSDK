@@ -1,8 +1,8 @@
 /**
  *  @file   PandoraSDK/include/Pandora/PandoraEnumeratedTypes.h
- * 
+ *
  *  @brief  Header file for pandora enumerated types
- * 
+ *
  *  $Log: $
  */
 #ifndef PANDORA_ENUMERATED_TYPES_H
@@ -17,7 +17,8 @@ namespace pandora
 enum CellGeometry
 {
     RECTANGULAR,
-    POINTING
+    POINTING,
+    POINTING_THETAPHI
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

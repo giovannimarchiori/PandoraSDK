@@ -1,8 +1,8 @@
 /**
  *  @file   PandoraSDK/include/Objects/CaloHit.h
- * 
+ *
  *  @brief  Header file for the calo hit class.
- * 
+ *
  *  $Log: $
  */
 #ifndef PANDORA_CALO_HIT_H
@@ -27,182 +27,182 @@ class CaloHit
 public:
     /**
      *  @brief  Get the position vector of center of calorimeter cell, units mm
-     * 
+     *
      *  @return the position vector
      */
     const CartesianVector &GetPositionVector() const;
 
     /**
      *  @brief  For LArTPC usage, the x-coordinate shift associated with a drift time t0 shift, units mm
-     * 
+     *
      *  @return the x-coordinate shift
      */
     float GetX0() const;
 
     /**
      *  @brief  Get the unit vector in direction of expected hit propagation
-     * 
+     *
      *  @return the expected direction
      */
     const CartesianVector &GetExpectedDirection() const;
 
     /**
      *  @brief  Get the unit vector normal to the sampling layer, pointing outwards from the origin
-     * 
+     *
      *  @return the normal vector
      */
     const CartesianVector &GetCellNormalVector() const;
 
     /**
      *  @brief  Get the cell geometry
-     * 
+     *
      *  @return the cell geometry
      */
     CellGeometry GetCellGeometry() const;
 
     /**
      *  @brief  Get the cell size 0 [pointing: eta, rectangular: up in ENDCAP, along beam in BARREL, units mm]
-     * 
+     *
      *  @return the cell size 0
      */
     float GetCellSize0() const;
 
     /**
      *  @brief  Get the cell size 1 [pointing: phi, rectangular: perpendicular to size 0 and thickness, units mm]
-     * 
+     *
      *  @return the cell size 1
      */
     float GetCellSize1() const;
 
     /**
      *  @brief  Get the thickness of cell, units mm
-     * 
+     *
      *  @return the thickness of cell
      */
     float GetCellThickness() const;
 
     /**
      *  @brief  Get the absorber material in front of cell, units radiation lengths
-     * 
+     *
      *  @return the absorber material in front of cell in radiation lengths
      */
     float GetNCellRadiationLengths() const;
 
     /**
      *  @brief  Get the absorber material in front of cell, units interaction lengths
-     * 
+     *
      *  @return the absorber material in front of cell in interaction lengths
      */
     float GetNCellInteractionLengths() const;
 
     /**
      *  @brief  Get the corrected energy of the calorimeter cell, units GeV, as supplied by the user
-     * 
+     *
      *  @return the corrected energy of the calorimeter cell
      */
     float GetInputEnergy() const;
 
     /**
      *  @brief  Get the time of (earliest) energy deposition in this cell, units ns
-     * 
+     *
      *  @return the time of (earliest) energy deposition in this cell
      */
     float GetTime() const;
 
     /**
      *  @brief  Whether cell should be treated as digital
-     * 
+     *
      *  @return boolean
      */
     bool IsDigital() const;
 
     /**
      *  @brief  Get the calorimeter hit type
-     * 
+     *
      *  @return the calorimeter hit type
      */
     HitType GetHitType() const;
 
     /**
      *  @brief  Get the region of the detector in which the calo hit is located
-     * 
+     *
      *  @return the detector region
      */
     HitRegion GetHitRegion() const;
 
     /**
      *  @brief  Get the subdetector readout layer number
-     * 
+     *
      *  @return the subdetector readout layer number
      */
     unsigned int GetLayer() const;
 
     /**
      *  @brief  Get pseudo layer for the calo hit
-     * 
+     *
      *  @return the pseudo layer
      */
     unsigned int GetPseudoLayer() const;
 
     /**
      *  @brief  Whether cell is in one of the outermost detector sampling layers
-     * 
+     *
      *  @return boolean
      */
     bool IsInOuterSamplingLayer() const;
 
     /**
      *  @brief  Get the calibrated mip equivalent energy
-     * 
+     *
      *  @return the calibrated mip equivalent energy
      */
     float GetMipEquivalentEnergy() const;
 
     /**
      *  @brief  Get the calibrated electromagnetic energy measure
-     * 
+     *
      *  @return the calibrated electromagnetic energy
      */
     float GetElectromagneticEnergy() const;
 
     /**
      *  @brief  Get the calibrated hadronic energy measure
-     * 
+     *
      *  @return the calibrated hadronic energy
      */
     float GetHadronicEnergy() const;
 
     /**
      *  @brief  Get the typical length scale of cell, units mm
-     * 
+     *
      *  @return the typical length scale of cell
      */
     float GetCellLengthScale() const;
 
     /**
      *  @brief  Whether the calo hit is flagged as a possible mip hit
-     * 
+     *
      *  @return boolean
      */
     bool IsPossibleMip() const;
 
     /**
      *  @brief  Whether the calo hit is flagged as isolated
-     * 
+     *
      *  @return boolean
      */
     bool IsIsolated() const;
 
     /**
      *  @brief  Get the calo hit weight, which may not be unity if the hit has been fragmented
-     * 
+     *
      *  @return the calo hit weight
      */
     float GetWeight() const;
 
     /**
      *  @brief  Get mc particle weight map for the calo hit
-     * 
+     *
      *  @return the mc particle weight map
      */
     const MCParticleWeightMap &GetMCParticleWeightMap() const;
@@ -214,16 +214,16 @@ public:
 
     /**
      *  @brief  Get the list of cartesian coordinates for the cell corners
-     * 
+     *
      *  @param  cartesianPointVector to receive the cartesian coordinates of the cell corners
      */
     void GetCellCorners(CartesianPointVector &cartesianPointVector) const;
 
     /**
      *  @brief  operator< sorting by position, then energy
-     * 
+     *
      *  @param  rhs the object for comparison
-     * 
+     *
      *  @return boolean
      */
     bool operator< (const CaloHit &rhs) const;
@@ -231,14 +231,14 @@ public:
 protected:
     /**
      *  @brief  Constructor
-     * 
+     *
      *  @param  parameters the calo hit parameters
      */
     CaloHit(const object_creation::CaloHit::Parameters &parameters);
 
     /**
      *  @brief  Weighted copy constructor
-     * 
+     *
      *  @param  parameters the calo hit fragmentation parameters
      */
     CaloHit(const object_creation::CaloHitFragment::Parameters &parameters);
@@ -250,21 +250,21 @@ protected:
 
     /**
      *  @brief  Alter the metadata information stored in a calo hit
-     * 
+     *
      *  @param  metaData the metadata (only populated metadata fields will be propagated to the object)
      */
     StatusCode AlterMetadata(const object_creation::CaloHit::Metadata &metadata);
 
     /**
      *  @brief  Set the mc pseudo layer for the calo hit
-     * 
+     *
      *  @param  pseudoLayer the pseudo layer
      */
     StatusCode SetPseudoLayer(const unsigned int pseudoLayer);
 
     /**
      *  @brief  Set the mc particles associated with the calo hit
-     * 
+     *
      *  @param  mcParticleWeightMap the mc particle weight map
      */
     void SetMCParticleWeightMap(const MCParticleWeightMap &mcParticleWeightMap);
@@ -276,35 +276,42 @@ protected:
 
     /**
      *  @brief  Calculate the typical length scale of the cell, units mm
-     * 
+     *
      *  @return the typical length scale of cell
      */
     float CalculateCellLengthScale() const;
 
     /**
      *  @brief  Get the list of cartesian coordinates for rectangular cell corners
-     * 
+     *
      *  @param  cartesianPointVector to receive the cartesian coordinates of the cell corners
      */
     void GetRectangularCellCorners(CartesianPointVector &cartesianPointVector) const;
 
     /**
      *  @brief  Get the list of cartesian coordinates for pointing cell corners
-     * 
+     *
      *  @param  cartesianPointVector to receive the cartesian coordinates of the cell corners
      */
     void GetPointingCellCorners(CartesianPointVector &cartesianPointVector) const;
 
     /**
+     *  @brief  Get the list of cartesian coordinates for theta-phi pointing cell corners
+     *
+     *  @param  cartesianPointVector to receive the cartesian coordinates of the cell corners
+     */
+    void GetPointingThetaPhiCellCorners(CartesianPointVector &cartesianPointVector) const;
+
+    /**
      *  @brief  Whether the calo hit is available to be added to a cluster (access this function via PandoraContentAPI)
-     * 
+     *
      *  @return boolean
      */
     bool IsAvailable() const;
 
     /**
      *  @brief  Set availability of calo hit to be added to a cluster
-     * 
+     *
      *  @param  isAvailable the calo hit availability
      */
     void SetAvailability(bool isAvailable);

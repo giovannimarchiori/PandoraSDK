@@ -1,8 +1,8 @@
 /**
  *  @file   PandoraSDK/include/Pandora/ObjectCreation.h
- * 
+ *
  *  @brief  Header file for pandora object creation classes
- * 
+ *
  *  $Log: $
  */
 #ifndef PANDORA_OBJECT_CREATION_H
@@ -26,7 +26,7 @@ namespace object_creation
 
 /**
  *  @brief  Object creation helper class
- * 
+ *
  *  @param  PARAMETERS the type of object parameters
  *  @param  METADATA the type of object metadata
  *  @param  OBJECT the type of object
@@ -62,7 +62,7 @@ public:
 
     /**
      *  @brief  Alter the metadata information stored in an object
-     * 
+     *
      *  @param  algorithm the algorithm calling this function
      *  @param  pObject address of the object to modify
      *  @param  metaData the metadata (only populated metadata fields will be propagated to the object)
@@ -120,9 +120,9 @@ public:
     pandora::InputCartesianVector       m_positionVector;           ///< Position vector of center of calorimeter cell, units mm
     pandora::InputCartesianVector       m_expectedDirection;        ///< Unit vector in direction of expected hit propagation
     pandora::InputCartesianVector       m_cellNormalVector;         ///< Unit normal to sampling layer, pointing outwards from the origin
-    pandora::InputCellGeometry          m_cellGeometry;             ///< The cell geometry type, pointing or rectangular
-    pandora::InputFloat                 m_cellSize0;                ///< Cell size 0 [pointing: eta, rectangular: up in ENDCAP, along beam in BARREL, units mm]
-    pandora::InputFloat                 m_cellSize1;                ///< Cell size 1 [pointing: phi, rectangular: perpendicular to size 0 and thickness, units mm]
+    pandora::InputCellGeometry          m_cellGeometry;             ///< The cell geometry type, pointing, pointing_thetaphi or rectangular
+    pandora::InputFloat                 m_cellSize0;                ///< Cell size 0 [pointing: eta; pointing_thetaphi: theta; rectangular: up in ENDCAP, along beam in BARREL, units mm]
+    pandora::InputFloat                 m_cellSize1;                ///< Cell size 1 [pointing: phi; pointing_thetaphi: theta; rectangular: perpendicular to size 0 and thickness, units mm]
     pandora::InputFloat                 m_cellThickness;            ///< Cell thickness, units mm
     pandora::InputFloat                 m_nCellRadiationLengths;    ///< Absorber material in front of cell, units radiation lengths
     pandora::InputFloat                 m_nCellInteractionLengths;  ///< Absorber material in front of cell, units interaction lengths
@@ -386,7 +386,7 @@ typedef ObjectCreationHelper<VertexParameters, VertexMetadata, pandora::Vertex> 
 
 /**
  *  @brief  Type definition helper class
- * 
+ *
  *  @param  PARAMETERS the type of object parameters
  *  @param  OBJECT the type of object
  */

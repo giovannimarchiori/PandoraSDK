@@ -1,8 +1,8 @@
 /**
  *    @file PandoraSDK/src/Objects/CaloHit.cc
- * 
+ *
  *    @brief Implementation of the calo hit class.
- * 
+ *
  *  $Log: $
  */
 
@@ -23,6 +23,11 @@ void CaloHit::GetCellCorners(CartesianPointVector &cartesianPointVector) const
     {
         this->GetPointingCellCorners(cartesianPointVector);
     }
+    else if (POINTING_THETAPHI == this->GetCellGeometry())
+    {
+        this->GetPointingThetaPhiCellCorners(cartesianPointVector);
+    }
+
     else
     {
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -186,6 +191,17 @@ float CaloHit::CalculateCellLengthScale() const
 
         return std::sqrt(std::fabs(radius * this->GetCellSize1() * radius * (thetaMax - thetaMin)));
     }
+    else if (POINTING_THETAPHI == this->GetCellGeometry())
+    {
+        float radius(0.f), phi(0.f), theta(0.f);
+        this->GetPositionVector().GetSphericalCoordinates(radius, phi, theta);
+
+        const float deltaPhi(this->GetCellSize1());
+        const float deltaTheta(this->GetCellSize0());
+
+        // surface in spherical coordinates is R**2 * sin(theta) * dphi * dtheta
+        return std::sqrt(std::fabs(radius * radius * std::sin(theta) * deltaPhi * deltaTheta));
+    }
     else
     {
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -229,6 +245,54 @@ void CaloHit::GetPointingCellCorners(CartesianPointVector &cartesianPointVector)
     const float phiMin(phi - this->GetCellSize1() / 2.f), phiMax(phi + this->GetCellSize1() / 2.f);
     const float etaMin(centralEta - this->GetCellSize0() / 2.f), etaMax(centralEta + this->GetCellSize0() / 2.f);
     const float thetaMin(2.f * std::atan(std::exp(-1.f * etaMin))), thetaMax(2.f * std::atan(std::exp(-1.f * etaMax)));
+
+    const float sinTheta(std::sin(theta)), cosTheta(std::cos(theta));
+    const float sinThetaMin(std::sin(thetaMin)), cosThetaMin(std::cos(thetaMin)), sinPhiMin(std::sin(phiMin)), cosPhiMin(std::cos(phiMin));
+    const float sinThetaMax(std::sin(thetaMax)), cosThetaMax(std::cos(thetaMax)), sinPhiMax(std::sin(phiMax)), cosPhiMax(std::cos(phiMax));
+
+    float thetaMinRScale(1.f), thetaMaxRScale(1.f);
+
+    if (BARREL == this->GetHitRegion())
+    {
+        if (std::fabs(sinThetaMin) > std::numeric_limits<float>::epsilon())
+            thetaMinRScale = std::fabs(sinTheta / sinThetaMin);
+
+        if (std::fabs(sinThetaMax) > std::numeric_limits<float>::epsilon())
+            thetaMaxRScale = std::fabs(sinTheta / sinThetaMax);
+    }
+    else
+    {
+        if (std::fabs(cosThetaMin) > std::numeric_limits<float>::epsilon())
+            thetaMinRScale = std::fabs(cosTheta / cosThetaMin);
+
+        if (std::fabs(cosThetaMax) > std::numeric_limits<float>::epsilon())
+            thetaMaxRScale = std::fabs(cosTheta / cosThetaMax);
+    }
+
+    const float rMinAtThetaMin(thetaMinRScale * rMin), rMinAtThetaMax(thetaMaxRScale * rMin);
+    const float rMaxAtThetaMin(thetaMinRScale * rMax), rMaxAtThetaMax(thetaMaxRScale * rMax);
+
+    cartesianPointVector.push_back(CartesianVector(rMinAtThetaMin * sinThetaMin * cosPhiMin, rMinAtThetaMin * sinThetaMin * sinPhiMin, rMinAtThetaMin * cosThetaMin));
+    cartesianPointVector.push_back(CartesianVector(rMinAtThetaMax * sinThetaMax * cosPhiMin, rMinAtThetaMax * sinThetaMax * sinPhiMin, rMinAtThetaMax * cosThetaMax));
+    cartesianPointVector.push_back(CartesianVector(rMinAtThetaMax * sinThetaMax * cosPhiMax, rMinAtThetaMax * sinThetaMax * sinPhiMax, rMinAtThetaMax * cosThetaMax));
+    cartesianPointVector.push_back(CartesianVector(rMinAtThetaMin * sinThetaMin * cosPhiMax, rMinAtThetaMin * sinThetaMin * sinPhiMax, rMinAtThetaMin * cosThetaMin));
+
+    cartesianPointVector.push_back(CartesianVector(rMaxAtThetaMin * sinThetaMin * cosPhiMin, rMaxAtThetaMin * sinThetaMin * sinPhiMin, rMaxAtThetaMin * cosThetaMin));
+    cartesianPointVector.push_back(CartesianVector(rMaxAtThetaMax * sinThetaMax * cosPhiMin, rMaxAtThetaMax * sinThetaMax * sinPhiMin, rMaxAtThetaMax * cosThetaMax));
+    cartesianPointVector.push_back(CartesianVector(rMaxAtThetaMax * sinThetaMax * cosPhiMax, rMaxAtThetaMax * sinThetaMax * sinPhiMax, rMaxAtThetaMax * cosThetaMax));
+    cartesianPointVector.push_back(CartesianVector(rMaxAtThetaMin * sinThetaMin * cosPhiMax, rMaxAtThetaMin * sinThetaMin * sinPhiMax, rMaxAtThetaMin * cosThetaMin));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void CaloHit::GetPointingThetaPhiCellCorners(CartesianPointVector &cartesianPointVector) const
+{
+    float radius(0.f), phi(0.f), theta(0.f);
+    this->GetPositionVector().GetSphericalCoordinates(radius, phi, theta);
+
+    const float rMin(radius - this->GetCellThickness() / 2.f), rMax(radius + this->GetCellThickness() / 2.f);
+    const float phiMin(phi - this->GetCellSize1() / 2.f), phiMax(phi + this->GetCellSize1() / 2.f);
+    const float thetaMin(theta - this->GetCellSize0() / 2.f), thetaMax(theta + this->GetCellSize0() / 2.f);
 
     const float sinTheta(std::sin(theta)), cosTheta(std::cos(theta));
     const float sinThetaMin(std::sin(thetaMin)), cosThetaMin(std::cos(thetaMin)), sinPhiMin(std::sin(phiMin)), cosPhiMin(std::cos(phiMin));
