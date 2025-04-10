@@ -163,6 +163,10 @@ StatusCode ClusterFitHelper::FitLayerCentroids(const Cluster *const pCluster, co
             return STATUS_CODE_OUT_OF_RANGE;
 
         ClusterFitPointList clusterFitPointList;
+        // once the hits are ordered by pseudolayer, can iterate over each layer
+        // and determine the centroid of each layer, with
+        // - position, cell length scale and energy = average of values of each hit
+        // - direction = sum of cell directions (normal vectors), normalised to unity
         for (const OrderedCaloHitList::value_type &layerIter : orderedCaloHitList)
         {
             const unsigned int pseudoLayer(layerIter.first);
@@ -192,6 +196,7 @@ StatusCode ClusterFitHelper::FitLayerCentroids(const Cluster *const pCluster, co
                 cellLengthScaleSum / static_cast<float>(nCaloHits), cellEnergySum / static_cast<float>(nCaloHits), pseudoLayer));
         }
 
+        // then, fit the centroids rather than fitting all hits in clusters
         return FitPoints(clusterFitPointList, clusterFitResult);
     }
     catch (StatusCodeException &statusCodeException)
@@ -210,6 +215,7 @@ StatusCode ClusterFitHelper::FitPoints(ClusterFitPointList &clusterFitPointList,
     try
     {
         const unsigned int nFitPoints(clusterFitPointList.size());
+        std::cout << "Number of points for fit: " << nFitPoints << std::endl;
 
         if (nFitPoints < 2)
             return STATUS_CODE_INVALID_PARAMETER;
@@ -239,12 +245,19 @@ StatusCode ClusterFitHelper::FitPoints(ClusterFitPointList &clusterFitPointList,
 StatusCode ClusterFitHelper::PerformLinearFit(const CartesianVector &centralPosition, const CartesianVector &centralDirection,
     ClusterFitPointList &clusterFitPointList, ClusterFitResult &clusterFitResult)
 {
+    std::cout << "Performing linear fit for cluster" << std::endl;
+    std::cout << "  initial position: " << centralPosition << std::endl;
+    std::cout << "  initial direction: " << centralDirection << std::endl;
+
     std::sort(clusterFitPointList.begin(), clusterFitPointList.end());
 
     // Extract the data
     double sumP(0.), sumQ(0.), sumR(0.), sumWeights(0.);
     double sumPR(0.), sumQR(0.), sumRR(0.);
 
+    // Rotate the coordinate system to align the estimated initial direction (centralDirection)
+    // with the z axis (chosenAxis) using Rodrigues rotation formula
+    // Points are also translated so that the centroid (centralPosition) is at the origin
     const CartesianVector chosenAxis(0.f, 0.f, 1.f);
     const double cosTheta(centralDirection.GetCosOpeningAngle(chosenAxis));
     const double sinTheta(std::sin(std::acos(cosTheta)));
@@ -272,21 +285,28 @@ StatusCode ClusterFitHelper::PerformLinearFit(const CartesianVector &centralPosi
         sumWeights += weight;
     }
 
-    // Perform the fit
+    // Once the points are rotated, perform a 2D linear regression in (p, q) plane as a function of r(z)
+    // i.e. find best fitting lines: p = a_p*r + b_p, q = a_q*r + b_q
     const double denominatorR(sumR * sumR - sumWeights * sumRR);
 
-    if (std::fabs(denominatorR) < std::numeric_limits<double>::epsilon())
+    if (std::fabs(denominatorR) < std::numeric_limits<double>::epsilon()) {
+        std::cout << "  fit failed" << std::endl;
         return STATUS_CODE_FAILURE;
+    }
 
     const double aP((sumR * sumP - sumWeights * sumPR) / denominatorR);
     const double bP((sumP - aP * sumR) / sumWeights);
     const double aQ((sumR * sumQ - sumWeights * sumQR) / denominatorR);
     const double bQ((sumQ - aQ * sumR) / sumWeights);
 
-    // Extract direction and intercept
+    // Convert fitted line back to 3D
+
+    // Extract direction in 3D: (a_p, a_q, 1) normalised to 1
     const double magnitude(std::sqrt(1. + aP * aP + aQ * aQ));
     const double dirP(aP / magnitude), dirQ(aQ / magnitude), dirR(1. / magnitude);
 
+    // Rotate the direction and intercept back to original frame
+    // Reverse rotation applied to direction vector to go back to original frame
     CartesianVector direction(
         static_cast<float>((cosTheta + rotationAxis.GetX() * rotationAxis.GetX() * (1. - cosTheta)) * dirP +
             (rotationAxis.GetX() * rotationAxis.GetY() * (1. - cosTheta) + rotationAxis.GetZ() * sinTheta) * dirQ +
@@ -298,6 +318,9 @@ StatusCode ClusterFitHelper::PerformLinearFit(const CartesianVector &centralPosi
             (rotationAxis.GetZ() * rotationAxis.GetY() * (1. - cosTheta) - rotationAxis.GetX() * sinTheta) * dirQ +
             (cosTheta + rotationAxis.GetZ() * rotationAxis.GetZ() * (1. - cosTheta)) * dirR) );
 
+    // Similar transformation for intercept (which is defined as the point of th best-fit line for r=0)
+    // i.e. at same z as centroid for endcap and at same rho as centroid for barrel?
+    // Additional translation to shift back the centroid at the proper position
     CartesianVector intercept(centralPosition + CartesianVector(
         static_cast<float>((cosTheta + rotationAxis.GetX() * rotationAxis.GetX() * (1. - cosTheta)) * bP +
             (rotationAxis.GetX() * rotationAxis.GetY() * (1. - cosTheta) + rotationAxis.GetZ() * sinTheta) * bQ),
@@ -306,7 +329,8 @@ StatusCode ClusterFitHelper::PerformLinearFit(const CartesianVector &centralPosi
         static_cast<float>((rotationAxis.GetZ() * rotationAxis.GetX() * (1. - cosTheta) + rotationAxis.GetY() * sinTheta) * bP +
             (rotationAxis.GetZ() * rotationAxis.GetY() * (1. - cosTheta) - rotationAxis.GetX() * sinTheta) * bQ) ));
 
-    // Extract radial direction cosine
+    // Extract radial direction cosine: cosine of angle between fitted direction, and direction calculated from
+    // intercept ("best-fit" centroid) assuming projectivity from IP
     float dirCosR(direction.GetDotProduct(intercept) / intercept.GetMagnitude());
 
     if (0.f > dirCosR)
@@ -363,6 +387,12 @@ StatusCode ClusterFitHelper::PerformLinearFit(const CartesianVector &centralPosi
     clusterFitResult.SetRms(static_cast<float>(std::sqrt(rms / nPoints)));
     clusterFitResult.SetRadialDirectionCosine(dirCosR);
     clusterFitResult.SetSuccessFlag(true);
+
+    std::cout << "  fit successful" << std::endl;
+    std::cout << "  final position: " << intercept << std::endl;
+    std::cout << "  final direction: " << direction << std::endl;
+    std::cout << "  rms: " << clusterFitResult.GetRms() << std::endl;
+    std::cout << "  cos(dRdir): " << dirCosR << std::endl;
 
     return STATUS_CODE_SUCCESS;
 }
